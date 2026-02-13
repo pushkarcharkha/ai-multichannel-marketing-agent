@@ -1,0 +1,865 @@
+{
+  "name": "Marketing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "a4c00b57-362f-4a80-a2c0-ef080682d950",
+        "formTitle": "Event / LinkedIn Post Details",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Topic",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Venue",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Date",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Time",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Registration Link (optional)"
+            },
+            {
+              "fieldLabel": "Platform",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "linkedin"
+                  },
+                  {
+                    "option": "email"
+                  },
+                  {
+                    "option": "telegram"
+                  },
+                  {
+                    "option": "whatsapp"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6edab1fc-a022-4e66-a397-c28a89c7161c",
+      "name": "On Form Submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [
+        48,
+        0
+      ],
+      "webhookId": "a4c00b57-362f-4a80-a2c0-ef080682d950"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7373bfa4-da0a-4656-9303-2052468955f1",
+      "name": "Mapper",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "moonshotai/kimi-k2-instruct-0905",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -80
+      ],
+      "id": "fc125e66-585d-4f22-bb21-61ba7abea0aa",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "MzcrkBmwqBnEmyvU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are generating content for a professional tech workshop poster.\n\nReturn ONLY valid JSON.\nNo explanation.\nNo markdown.\n\nRules:\n- Course title max 3 words.\n- Each point max 8 words.\n\nOutput format:\n\n{\n  \"course_title\": \"\",\n  \"point1\": \"\",\n  \"point2\": \"\",\n  \"point3\": \"\"\n}\n\nWorkshop Topic: {{ $json.Topic }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You generate structured JSON for workshop poster content.\nDo not generate HTML.\nDo not explain anything.\nReturn valid JSON only.\n",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        592,
+        -336
+      ],
+      "id": "4b5ed86f-1b08-49cb-98ab-ce7e5bad6176",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "html_content": "={{ $json.html }}"
+      },
+      "type": "n8n-nodes-htmlcsstoimage.htmlCssToImage",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -32
+      ],
+      "id": "cf945c52-96b4-485a-9b8f-6a2a7283e367",
+      "name": "HTML/CSS to Image",
+      "credentials": {
+        "htmlcsstoimgApi": {
+          "id": "LQDbHo1TXYtbuJvq",
+          "name": "Htmlcsstoimg account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ai = $json.output;\nconst html = `\n<div class=\"poster-container\">\n\n  <div class=\"shape shape-1\"></div>\n  <div class=\"shape shape-2\"></div>\n  <div class=\"shape shape-3\"></div>\n\n  <div class=\"header\">\n    <div class=\"logo-section\">\n      <div class=\"logo-wrapper\">\n        <div class=\"logo-a\">A</div>\n        <div class=\"logo-v\">V</div>\n        <div class=\"logo-text-side\">TECHNO</div>\n        <div class=\"logo-text-bottom\">CAVE</div>\n      </div>\n      <div class=\"logo-tagline\">Enlightening Lives</div>\n    </div>\n\n    <div class=\"title-section\">\n      <h1 class=\"main-brand\">TechnoCave</h1>\n      <p class=\"collab-text\">In Collaboration With</p>\n      <h2 class=\"institution-name\">${$json.Venue}</h2>\n    </div>\n  </div>\n\n  <div class=\"main-content\">\n    <h1 class=\"course-title\">${$json.output.course_title}</h1>\n\n    <ul class=\"features-list\">\n      <li>${$json.output.point1}</li>\n      <li>${$json.output.point2}</li>\n      <li>${$json.output.point3}</li>\n    </ul>\n\n    <div class=\"event-details\">\n      <p>📅 ${$json.Date}</p>\n      <p>⏰ ${$json.Time}</p>\n    </div>\n  </div>\n  <div class=\"instructor-section\">\n  <img src=\"https://images.pexels.com/photos/17783401/pexels-photo-17783401.jpeg\" class=\"instructor-img\" />\n  <p class=\"instructor-name\">By: John Doe</p>\n</div>\n\n</div>\n<style>\n  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');\n\n  :root {\n    --primary-blue: #002060;\n    --accent-blue: #3b66f5;\n    --white: #ffffff;\n  }\n\n  * {\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n  }\n\n  body {\n    font-family: 'Montserrat', sans-serif;\n  }\n\n  .poster-container {\n    width: 800px;\n    height: 500px;\n    background-color: var(--white);\n    position: relative;\n    overflow: hidden;\n  }\n\n  .shape {\n    position: absolute;\n    z-index: 1;\n  }\n\n  .shape-1 {\n    top: -50px;\n    right: -50px;\n    width: 300px;\n    height: 300px;\n    background-color: var(--primary-blue);\n    transform: rotate(45deg);\n  }\n\n  .shape-2 {\n    top: -100px;\n    right: -150px;\n    width: 400px;\n    height: 400px;\n    background-color: var(--accent-blue);\n    transform: rotate(35deg);\n  }\n\n  .shape-3 {\n    bottom: -150px;\n    right: -100px;\n    width: 350px;\n    height: 350px;\n    background-color: var(--accent-blue);\n    transform: rotate(15deg);\n  }\n\n  .header {\n    display: flex;\n    padding: 30px 40px;\n    position: relative;\n    z-index: 2;\n  }\n\n  .logo-section {\n    width: 150px;\n    text-align: center;\n  }\n\n  .logo-wrapper {\n    position: relative;\n    height: 80px;\n  }\n\n  .logo-a, .logo-v {\n    font-size: 60px;\n    font-weight: 800;\n    color: #c5a028;\n    position: absolute;\n  }\n\n  .logo-a { left: 20px; top: 0; }\n  .logo-v { left: 45px; top: 15px; }\n\n  .logo-text-side,\n  .logo-text-bottom {\n    position: absolute;\n    font-size: 10px;\n    font-weight: 700;\n  }\n\n  .logo-text-side { right: 10px; top: 25px; }\n  .logo-text-bottom { left: 20px; bottom: 0; }\n\n  .logo-tagline {\n    font-size: 12px;\n    margin-top: 10px;\n  }\n\n    .title-section {\n    flex: 1;\n    text-align: center;\n    color: var(--primary-blue);\n    margin-right: 140px;  /* push away from blue shape */\n    }\n\n    .collab-text {\n    font-size: 16px;\n    font-weight: 500;\n    margin-top: 4px;\n        }  \n\n  .main-brand {\n    font-size: 32px;\n    font-weight: 800;\n  }\n\n  .institution-name {\n    font-size: 22px;\n    font-weight: 600;\n  }\n\n  .main-content {\n    padding: 20px 60px;\n    position: relative;\n    z-index: 2;\n  }\n\n  .course-title {\n    font-size: 48px;\n    font-weight: 800;\n    color: var(--primary-blue);\n    margin-bottom: 20px;\n    word-break: break-word;\n  }\n\n  .features-list {\n    list-style: none;\n    font-size: 18px;\n    color: var(--primary-blue);\n    margin-bottom: 15px;\n  }\n\n  .features-list li {\n    margin-bottom: 6px;\n  }\n\n  .event-details {\n    font-size: 16px;\n    font-weight: 600;\n    color: var(--primary-blue);\n  }\n\n        .instructor-section {\n        position: absolute;\n        bottom: 70px;  /* moved UP */\n        right: 60px;   /* slightly inward */\n        text-align: center;\n        z-index: 3;\n        }\n\n        .instructor-img {\n        width: 170px;   /* bigger */\n        height: 170px;\n        border-radius: 50%;\n        object-fit: cover;\n        border: 6px solid white;\n        box-shadow: 0 12px 30px rgba(0,0,0,0.35);\n        }\n\n        .instructor-name {\n        margin-top: 10px;\n        font-size: 16px;\n        font-weight: 700;\n        color: white;\n        }\n\n\n\n</style\n`;\nreturn {\n  json: {\n    html: html\n  }\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        -32
+      ],
+      "id": "aec6cfbc-9a8e-4611-a6c1-2eb7cd1de006",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"course_title\": { \"type\": \"string\" },\n    \"point1\": { \"type\": \"string\" },\n    \"point2\": { \"type\": \"string\" },\n    \"point3\": { \"type\": \"string\" }\n  },\n  \"required\": [\"course_title\", \"point1\", \"point2\", \"point3\"],\n  \"additionalProperties\": false\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        -64
+      ],
+      "id": "9e7a9804-7be6-4725-a011-10692bc893ae",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "e13e16aa-4592-46ec-9f0f-fc48f32827d8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2208,
+        -928
+      ],
+      "id": "aa469d04-c4b9-42bf-9dc5-71fb02448dce",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      caption: $json.content,\n      image_url: $json.image_url,\n      created_at: new Date().toISOString()\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        -928
+      ],
+      "id": "0c7c3a02-2eee-4b51-92ff-eb7dc346b298",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3-coder-next",
+          "mode": "list",
+          "cachedResultName": "qwen3-coder-next"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Write a professional LinkedIn post promoting this workshop.\n\nInclude:\n- Strong hook\n- 3 bullet benefits\n- Call to action\n- Relevant hashtags"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        -944
+      ],
+      "id": "668e3709-112e-4941-b64b-08e67703f574",
+      "name": "Linkedin Content",
+      "credentials": {
+        "ollamaApi": {
+          "id": "DKas5F1lRYB7fMNf",
+          "name": "Ollama account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI output (it's a string)\nconst email = JSON.parse($json.content);\n\n// Get image URL from HTML/CSS node\nconst imageUrl = $node[\"HTML/CSS to Image\"].json.image_url;\n\n// Build final email body\nconst finalBody = `\n<img src=\"${imageUrl}\" style=\"width:100%; max-width:600px; border-radius:10px;\" />\n<br/><br/>\n${email.body_html}\n`;\n\nreturn [{\n  json: {\n    subject: email.subject,\n    body_html: finalBody,\n    image_url: imageUrl\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        -592
+      ],
+      "id": "1e267b6c-a89b-4d76-abe0-e4fcd6540b8f",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2576,
+        -592
+      ],
+      "id": "445008fd-dd46-4ee9-bfed-690aa5757a91",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "sendTo": "pushkarcharkha59@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body_html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3008,
+        -592
+      ],
+      "id": "a194d406-041e-4ff6-b998-bbd8ddfd0962",
+      "name": "Send a message",
+      "webhookId": "4d7bf35e-2db3-4afb-8cc3-5b5549193400",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YjGzMjk93T5ZNagG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "cogito-2.1:671b",
+          "mode": "list",
+          "cachedResultName": "cogito-2.1:671b"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write a compelling email invitation for college students.\n\nInclude:\n- Engaging subject line\n- Short intro\n- Workshop details\n- Call to action\n- Friendly tone\n- Mention limited seats\n\nWorkshop details:\nTitle: {{$json.output.course_title}}\nVenue: {{$json.Venue}}\nDate: {{$json.Date}}\nTime: {{$json.Time}}\n\nReturn ONLY valid JSON in this format:\n\n{\n  \"subject\": \"string\",\n  \"body_html\": \"string\"\n}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        -608
+      ],
+      "id": "dcf456be-2b76-494d-83db-536a3ecde384",
+      "name": "Email content",
+      "credentials": {
+        "ollamaApi": {
+          "id": "DKas5F1lRYB7fMNf",
+          "name": "Ollama account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "kimi-k2.5",
+          "mode": "list",
+          "cachedResultName": "kimi-k2.5"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        240
+      ],
+      "id": "5d77120c-3a7a-4ecd-a84d-51944219a398",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "DKas5F1lRYB7fMNf",
+          "name": "Ollama account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2464,
+        528
+      ],
+      "id": "18ae7c3d-46b4-45bf-8dda-98e843898980",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3-coder-next",
+          "mode": "list",
+          "cachedResultName": "qwen3-coder-next"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a professional social media copywriter.\n\nGenerate a high-converting Telegram channel post for a college workshop event.\n\nUse this structure:\n\n1. Strong hook line (1 sentence, attention-grabbing)\n2. Short event intro\n3. Key highlights in bullet points\n4. Date and Time section\n5. Venue section\n6. Clear call to action\n7. 3–5 relevant hashtags at the end\n\nKeep tone energetic, crisp, and suitable for college students.\nUse emojis but not excessively.\nKeep it under 150 words.\nDo NOT include placeholders like [Name].\n\nEvent Details:\nTitle: {{ $json.course_title }}\nPoints:\n- {{ $json.point1 }}\n- {{ $json.point2 }}\n- {{ $json.point3 }}\n\nVenue: {{ $json.Venue }}\nDate: {{ $json.Date }}\nTime: {{ $json.Time }}\n\nGenerate only the final post text.\nMention that the event poster is attached below.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        528
+      ],
+      "id": "d303f32d-baf6-444c-9f8b-9b1c2fae9de9",
+      "name": "Telegram Post Generation",
+      "credentials": {
+        "ollamaApi": {
+          "id": "DKas5F1lRYB7fMNf",
+          "name": "Ollama account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "@technocavechannel",
+        "text": "={{ $json.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2816,
+        528
+      ],
+      "id": "8b1671d8-91e0-4076-9aac-0c5059876833",
+      "name": "Send a text message",
+      "webhookId": "baa21582-5a72-43a2-9f11-d66f76230894",
+      "credentials": {
+        "telegramApi": {
+          "id": "3ZBdB6EJPXQgmoRP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "@technocavechannel",
+        "file": "={{ $('Merge3').item.json.image_url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3184,
+        528
+      ],
+      "id": "0b6efab2-004f-4f46-97d8-123ca2e49514",
+      "name": "Send a photo message",
+      "webhookId": "baa21582-5a72-43a2-9f11-d66f76230894",
+      "credentials": {
+        "telegramApi": {
+          "id": "3ZBdB6EJPXQgmoRP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "27a3fff7-eb08-472f-ac2c-31a61fcbefa5",
+              "leftValue": "={{ $json.Platform?.includes(\"linkedin\") }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        -928
+      ],
+      "id": "b8895cd0-d3b1-45c7-9af1-e2ccc8f86080",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "53f0daa1-8abf-4794-adc3-bd1f55e2843a",
+              "leftValue": "={{ $json.Platform?.includes(\"email\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1584,
+        -608
+      ],
+      "id": "0ecab772-8a65-4f63-a762-a4a66539cf04",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fa88b27a-8fc8-436a-a2a3-b6879dd31670",
+              "leftValue": "={{ $json.Platform?.includes(\"whatsapp\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        272
+      ],
+      "id": "6ce1c78e-bdd9-4811-9e7e-d5ba415eb524",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "53f0daa1-8abf-4794-adc3-bd1f55e2843a",
+              "leftValue": "={{ $json.Platform?.includes(\"telegram\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1616,
+        544
+      ],
+      "id": "871cb91e-cee6-4746-ba67-350ddc809ca5",
+      "name": "If3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Mapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapper": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTML/CSS to Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML/CSS to Image": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        []
+      ]
+    },
+    "Linkedin Content": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email content": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        []
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Post Generation": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Linkedin Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Email content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Telegram Post Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "9b1ca7f7-ae40-41f0-b646-41e483f8646f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bed53b9e52c753e7bb31d1e009c1c8c90241a6bbdb9d02f5426df0053f404275"
+  },
+  "id": "m9rkwXtqt3fz6wmETgVe2",
+  "tags": [
+    {
+      "updatedAt": "2026-02-07T06:47:31.319Z",
+      "createdAt": "2026-02-07T06:47:31.319Z",
+      "id": "wEGrUY6uKP2tzPvV",
+      "name": "Digital Marketing"
+    }
+  ]
+}
